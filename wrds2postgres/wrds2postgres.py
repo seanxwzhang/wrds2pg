@@ -18,6 +18,7 @@ def get_process(sas_code, wrds_id=None, fpath=None):
         """Function runs SAS code on WRDS server and
         returns result as pipe on stdout."""
         client.load_system_host_keys()
+        client.set_missing_host_key_policy(paramiko.AutoAddPolicy()) 
         client.connect('wrds-cloud.wharton.upenn.edu',
                        username=wrds_id, compress=True)
         stdin, stdout, stderr = client.exec_command("qsas -stdio -noterminal | iconv -f LATIN1 -t UTF8")
