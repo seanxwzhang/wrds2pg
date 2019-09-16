@@ -8,6 +8,7 @@ from os import getenv
 
 client = paramiko.SSHClient()
 wrds_id = getenv("WRDS_ID")
+wrds_pass = getenv("WRDS_PASS")
 
 import warnings
 warnings.filterwarnings(action='ignore',module='.*paramiko.*')
@@ -20,7 +21,7 @@ def get_process(sas_code, wrds_id=None, fpath=None):
         client.load_system_host_keys()
         client.set_missing_host_key_policy(paramiko.AutoAddPolicy()) 
         client.connect('wrds-cloud.wharton.upenn.edu',
-                       username=wrds_id, compress=True)
+                       username=wrds_id, password=wrds_pass, compress=True)
         stdin, stdout, stderr = client.exec_command("qsas -stdio -noterminal | iconv -f LATIN1 -t UTF8")
         stdin.write(sas_code)
         stdin.close()
