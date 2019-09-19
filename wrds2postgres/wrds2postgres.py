@@ -24,7 +24,7 @@ def get_process(sas_code, wrds_id=None, fpath=None):
         client.set_missing_host_key_policy(paramiko.AutoAddPolicy()) 
         client.connect('wrds-cloud.wharton.upenn.edu',
                        username=wrds_id, password=wrds_pass, compress=True)
-        stdin, stdout, stderr = client.exec_command("qsas -stdio -noterminal | iconv -f LATIN1 -t UTF8")
+        stdin, stdout, _ = client.exec_command("qsas -stdio -noterminal | iconv -f LATIN1 -t UTF8")
         stdin.write(sas_code)
         stdin.close()
 
