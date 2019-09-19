@@ -2,8 +2,10 @@
 # Run the SAS code on the WRDS server and get the result
 import pandas as pd
 import wrds
-from io import StringIO
 import re, subprocess, os, paramiko
+import logging
+import warnings
+from io import StringIO
 from time import gmtime, strftime
 from sqlalchemy import create_engine
 from os import getenv
@@ -12,7 +14,10 @@ client = paramiko.SSHClient()
 wrds_id = getenv("WRDS_ID")
 wrds_pass = getenv("WRDS_PASS")
 
-import warnings
+logging.basicConfig(format="%(asctime)s %(levelname)s: %(message)s")
+logger = logging.getLogger("wrds2postgres")
+logger.setLevel(getenv("LOGLEVEL", "DEBUG"))
+
 warnings.filterwarnings(action='ignore',module='.*paramiko.*')
 
 def get_process(sas_code, wrds_id=None, fpath=None):
@@ -390,6 +395,27 @@ def list_tables(schema, wrds_id=os.getenv("WRDS_ID")):
     tables = db.list_tables(schema)
     db.close()
     return tables
+
+def list_accessible_tables(schema, wrds_id=os.getenv("WRDS_ID")):
+    db = wrds.Connection(wrds_username=wrds_id)
+    tables = db.list_tables(schema)
+    accessible, non_accessible = [], []
+    logger.info(f"Checking permission on {len(tables)} tables in schema {schema}")
+    for table in tables:
+        try:
+            logger.debug(f"Checking {table}")
+            db.get_table(schema, table, obs=1)
+            accessible.append(table)
+            logger.debug(f"{table} is accessible")
+        except Exception as e:
+            if "InsufficientPrivilege" in str(e):
+                non_accessible.append(table)
+                logger.debug(f"{table} is not accessible")
+            else:
+                raise
+    db.close()
+    logger.info(f"{len(accessible)}/{len(tables)} tables are accessible, {len(non_accessible)}/{len(tables)} tables are not.")
+    return accessible, non_accessible
 
 def wrds_update(table_name, schema, host=os.getenv("PGHOST"), dbname=os.getenv("PGDATABASE"), engine=None, 
         wrds_id=os.getenv("WRDS_ID"), fpath=None, force=False, fix_missing=False, fix_cr=False, drop="", keep="", 

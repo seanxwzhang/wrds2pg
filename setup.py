@@ -6,7 +6,7 @@ with open("README.md", "r") as f:
 
 setuptools.setup(
     name="wrds2postgres",
-    version="0.0.4",
+    version="0.0.5",
     author="Xiaowen Zhang",
     author_email="seanxwzhang@gmail.com",
     description="Import WRDS tables or SAS data into PostgreSQL. Forked from https://github.com/iangow/wrds2pg.",
