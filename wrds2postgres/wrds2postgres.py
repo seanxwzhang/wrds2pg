@@ -1,5 +1,7 @@
+#!/usr/bin/env python
 # Run the SAS code on the WRDS server and get the result
 import pandas as pd
+import wrds
 from io import StringIO
 import re, subprocess, os, paramiko
 from time import gmtime, strftime
@@ -165,7 +167,7 @@ def get_table_sql(table_name, schema, wrds_id=None, fpath=None, drop="", keep=""
 def get_wrds_process(table_name, schema, wrds_id=None, fpath=None,
                      drop="", keep="", fix_cr = False, fix_missing = False, obs="", rename=""):
     if fix_cr:
-        fix_missing = True;
+        fix_missing = True
         fix_cr_code = """
             array _char _character_;
             do over _char;
@@ -377,6 +379,18 @@ def wrds_process_to_pg(table_name, schema, engine, p):
         p.close()
     return True
 
+def list_schemas(wrds_id=os.getenv("WRDS_ID")):
+    db = wrds.Connection(wrds_username=wrds_id)
+    libraries = db.list_libraries()
+    db.close()
+    return libraries
+
+def list_tables(schema, wrds_id=os.getenv("WRDS_ID")):
+    db = wrds.Connection(wrds_username=wrds_id)
+    tables = db.list_tables(schema)
+    db.close()
+    return tables
+
 def wrds_update(table_name, schema, host=os.getenv("PGHOST"), dbname=os.getenv("PGDATABASE"), engine=None, 
         wrds_id=os.getenv("WRDS_ID"), fpath=None, force=False, fix_missing=False, fix_cr=False, drop="", keep="", 
         obs="", rename="", alt_table_name=None):
@@ -460,5 +474,5 @@ def role_exists(engine, role):
     return rs[0] > 0
 
 def create_role(engine, role):
-    res = engine.execute("CREATE ROLE %s" % role)
+    engine.execute("CREATE ROLE %s" % role)
     return True
