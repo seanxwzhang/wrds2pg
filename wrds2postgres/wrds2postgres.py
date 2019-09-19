@@ -315,7 +315,7 @@ def set_table_comment(table_name, schema, comment, engine):
         COMMENT ON TABLE "%s"."%s" IS '%s'""" % (schema, table_name, comment)
 
     try:
-        res = connection.execute(sql)
+        connection.execute(sql)
         trans.commit()
     except:
         trans.rollback()
